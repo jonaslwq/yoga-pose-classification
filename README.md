@@ -2,6 +2,8 @@
 
 This repository contains code for building and training a pose classification model using TensorFlow and the MoveNet pose estimation model. The goal is to classify yoga poses based on the landmarks detected by MoveNet.
 
+**Report:** https://publuu.com/flip-book/200279/484470/page/1
+
 ## Overview
 
 The code consists of several components:
