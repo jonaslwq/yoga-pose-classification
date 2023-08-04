@@ -1,126 +1,121 @@
-# Pose Classification with MoveNet and TensorFlow
+# Yoga Pose Classification with Deep Learning
 
-This repository contains code for building and training a pose classification model using TensorFlow and the MoveNet pose estimation model. The goal is to classify yoga poses based on the landmarks detected by MoveNet.
+## Introduction
 
-**Report:** https://publuu.com/flip-book/200279/484470/page/1
+This repository contains code for a yoga pose classification project using deep learning. The project aims to classify yoga poses based on landmark data obtained from images. The models used in this project are implemented using TensorFlow and PyTorch frameworks. The goal is to develop accurate and efficient models for classifying yoga poses, which can have applications in fitness tracking, yoga training, and pose analysis.
 
-## Overview
+## Dataset
 
-The code consists of several components:
+The dataset used in this project contains landmark information extracted from images of various yoga poses. Each image is associated with a specific yoga pose, and the landmark data captures the key points of the pose. The dataset is split into training and testing sets to evaluate the performance of the trained models accurately.
 
-1. **Pose Estimation with MoveNet:** We use the MoveNet Thunder model from TensorFlow Hub to detect landmarks (keypoints) of yoga poses from input images.
+## Requirements
 
-2. **Preprocessing:** The `MoveNetPreprocessor` class is responsible for loading the images, running pose estimation, and saving the detected landmarks into CSV files. It also splits the dataset into training and test sets.
+To run the code in this repository, you need the following:
 
-3. **Model Architecture:** We define a pose classification model using TensorFlow/Keras. The model takes in the detected landmarks and outputs the class probabilities for each yoga pose.
-
-4. **Training:** The model is trained using the training dataset generated from the preprocessed landmarks. We use Adam optimizer, categorical cross-entropy loss, and accuracy as the evaluation metric.
-
-5. **Model Conversion to TensorFlow Lite:** After training, the model is converted to TensorFlow Lite (TFLite) format for deployment on mobile and edge devices. TFLite models are optimized for inference on resource-constrained devices.
-
-## Dependencies
-
-- Python 3.x
-- TensorFlow 2.x
-- Numpy
-- OpenCV (cv2)
-- Pandas
+- Python (>= 3.6)
+- TensorFlow (>= 2.0)
+- PyTorch (>= 1.7)
+- NumPy
+- Matplotlib
+- OpenCV
+- scikit-learn
 - tqdm
-- PyInquirer (for command-line interaction)
+- TensorFlow Hub
 
-## How to Use
+Install the required packages using:
 
-1. **Dataset Preparation:** Place your yoga pose images in the following directory structure:
-
-```
-yoga_poses/
-|__ downdog/
-    |______ 00000128.jpg
-    |______ 00000181.jpg
-    |______ ...
-|__ goddess/
-    |______ 00000243.jpg
-    |______ 00000306.jpg
-    |______ ...
-...
+```bash
+pip install tensorflow torch numpy matplotlib opencv-python scikit-learn tqdm tensorflow-hub
 ```
 
-Make sure to replace `yoga_poses/` with the actual path to your dataset.
+## Usage
 
-2. **Preprocessing and Pose Estimation:** Run the `MoveNetPreprocessor` class to preprocess the images, detect pose landmarks, and save them into CSV files:
+To train and evaluate the models, follow these steps:
+
+1. Clone this repository:
+
+```bash
+git clone https://github.com/your_username/yoga-pose-classification.git
+cd yoga-pose-classification
+```
+
+2. Prepare the data:
+
+The dataset should be placed in the `./DATASETNEW/yoga_set` directory. Make sure that the dataset is organized into subdirectories, with each subdirectory representing a different yoga pose and containing images of that pose.
+
+3. Training the Base CNN model:
+
+The initial model used in this project is the Base CNN model. Run the following code to train the Base CNN model:
 
 ```python
-# Replace 'dataset_in' with the path to your dataset.
-# Set 'dataset_is_split' to False if you want to split the dataset into train and test sets.
-from preprocess import MoveNetPreprocessor, split_into_train_test
-
-use_custom_dataset = True  # Set this to True if using a custom dataset.
-dataset_is_split = True    # Set this to False if you need to split the dataset.
-dataset_in = 'yoga_poses/' # Replace this with your dataset path.
-
-if use_custom_dataset:
-    if not os.path.isdir(dataset_in):
-        raise Exception("dataset_in is not a valid directory")
-
-    if dataset_is_split:
-        IMAGES_ROOT = dataset_in
-    else:
-        dataset_out = 'split_' + dataset_in
-        split_into_train_test(dataset_in, dataset_out, test_split=0.2)
-        IMAGES_ROOT = dataset_out
-
-preprocessor = MoveNetPreprocessor(images_in_folder=IMAGES_ROOT,
-                                   images_out_folder='output/images_with_landmarks',
-                                   csvs_out_path='output/landmarks.csv')
-preprocessor.process()
+train_test_draw(model, "base_cnn", 200, 16)
 ```
 
-3. **Model Training:** Run the training code to build and train the pose classification model:
+4. Hyperparameter Tuning:
+
+The project explores hyperparameter tuning using L2 regularization and changing batch numbers. For example:
+
+- Using L2 regularization
+- Changing Batch Number
+
+5. Analysis Comparison with other SOTA models:
+
+The project also compares the performance of the Base CNN model with other state-of-the-art models like DenseNet and EfficientNet. For example:
+
+- DenseNet
+- EfficientNet with PyTorch
+
+6. Export Model
+
+The trained pose classification model can be converted to TensorFlow Lite format ('pose_classifier.tflite') for efficient deployment on resource-constrained devices such as mobile phones and embedded systems. The model size, measured in kilobytes, provides an idea of the file's compactness, which is crucial for optimizing memory usage on these platforms.
+
+To export the model to TensorFlow Lite, follow these steps:
 
 ```python
-from pose_classifier import build_pose_classifier_model, load_pose_landmarks
-
-# Replace 'landmarks.csv' with the CSV file containing the detected landmarks.
-X, y, class_names, _ = load_pose_landmarks('output/landmarks.csv')
-
-# Replace this with your model architecture, or use the default pose_classifier model.
-model = build_pose_classifier_model(class_names)
-
-# Compile the model with appropriate optimizer, loss, and metrics.
-model.compile(optimizer='adam',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-
-# Train the model with your training and validation data.
-history = model.fit(X_train, y_train,
-                    epochs=200,
-                    batch_size=16,
-                    validation_data=(X_val, y_val))
-```
-
-4. **Model Conversion to TFLite:** After training, convert the model to TFLite format for deployment on mobile and edge devices:
-
-```python
-import tensorflow as tf
-
-# Convert the Keras model to TFLite format.
+model = load_model("base_cnn")
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 tflite_model = converter.convert()
 
-# Save the TFLite model to a file.
+print('Model size: %dKB' % (len(tflite_model) / 1024))
+
+# Save the TFLite model to a file
 with open('pose_classifier.tflite', 'wb') as f:
   f.write(tflite_model)
+
+# Save the class labels to a file (optional)
+with open('pose_labels.txt', 'w') as f:
+  f.write('\n'.join(class_names))
 ```
 
-5. **Evaluation with TFLite Model:** Load the TFLite model and evaluate its accuracy on the test dataset:
+After exporting the model, you can use the `evaluate_model` function to assess its accuracy on a test dataset. This function takes a TensorFlow Lite interpreter, the input test data (`X_test`), and the corresponding ground truth labels (`y_test`) as inputs.
 
 ```python
-from sklearn.metrics import accuracy_score
+def evaluate_model(interpreter, X, y_true):
+  """Evaluates the given TFLite model and returns its accuracy."""
+  # ... (code continues as in the original segment)
+```
 
-# Load the TFLite model.
+Finally, you can evaluate the accuracy of the converted TFLite model as follows:
+
+```python
 classifier_interpreter = tf.lite.Interpreter(model_content=tflite_model)
 classifier_interpreter.allocate_tensors()
+print('Accuracy of TFLite model: %s' % evaluate_model(classifier_interpreter, X_test, y_test))
+```
 
-# Replace X_test and y_test with your test dataset.
-accuracy = evaluate_model(classifier_inter
+By exporting the model to TensorFlow Lite, you can deploy it efficiently on mobile and edge devices to perform real-time yoga pose classification.
+
+## Results
+
+Our proposed CNN achieved an accuracy of 96.7% and a loss of 0.288 on the Kaggle dataset. When tested on our collected Singapore dataset, the accuracy was 93.2%. Comparing our model with DenseNet and EfficientNet, our proposed model outperformed them in both accuracy and latency.
+
+## Limitations:
+
+One limitation is the lack of a specific dataset for Singaporeans doing yoga, which may affect the model's generalization to the local context. The model is currently optimized for able-bodied individuals and may not be suitable for individuals with physical disabilities.
+
+## Proposed Modifications/Improvements:
+To improve the model's accuracy and scalability, we propose data augmentation techniques, including image flipping and rotation. Additionally, we suggest generating a user-specific joint profile to accommodate differently-abled individuals. Obtaining a Singapore-labeled dataset would further enhance the model's accuracy for local user
+
+## Conclusion
+Our proposed system for yoga pose classification using deep learning models shows promising results, with high accuracy and low latency. The application can be a valuable tool for individuals practicing yoga at home, providing real-time feedback and guidance. With further improvements and inclusion of more diverse datasets, the model can cater to a broader audience and contribute to promoting a healthy lifestyle.
